@@ -1,0 +1,275 @@
+
+#  Activity Selection
+
+def activity_selection(activities):
+    """
+    Chọn số lượng hoạt động tối đa không chồng lấp
+    Chiến lược: Chọn hoạt động kết thúc sớm nhất
+    """
+
+    if not activities:
+        return []
+
+    activities = sorted(activities, key=lambda x: x[1])
+
+    selected = [activities[0]]
+    last_finish = activities[0][1]
+
+    for start, finish in activities[1:]:
+        if start >= last_finish:
+            selected.append((start, finish))
+            last_finish = finish
+
+    return selected
+
+
+print("=== Activity Selection ===")
+
+activities1 = [
+    (1, 4), (3, 5), (0, 6),
+    (5, 7), (3, 9), (5, 9),
+    (6, 10), (8, 11), (8, 12),
+    (2, 14), (12, 16)
+]
+
+result = activity_selection(activities1)
+print("Selected:", result)
+print("Count:", len(result))
+
+
+activities2 = [(1,3),(2,4),(3,5),(4,6)]
+result = activity_selection(activities2)
+print("Selected:", result)
+print("Count:", len(result))
+
+# Bài 1.2 - Coin Change Greedy
+
+def coin_change_greedy(amount, coins):
+    """
+    Đổi tiền bằng Greedy
+    Luôn chọn đồng lớn nhất có thể
+    """
+    coins = sorted(coins, reverse=True)
+    count = 0
+    used = []
+    for coin in coins:
+        while amount >= coin:
+            amount -= coin
+            count += 1
+            used.append(coin)
+    if amount == 0:
+        return count, used
+    return -1, []
+
+print("\n=== Coin Change Greedy ===")
+count, detail = coin_change_greedy(63,[25,10,5,1])
+print(count, detail)
+count, detail = coin_change_greedy(370,[500,200,100,50,20,10])
+print(count, detail)
+count, detail = coin_change_greedy(30,[25,10,1])
+print(count, detail)
+
+
+#  Fractional Knapsack
+
+def fractional_knapsack(capacity, items):
+    """
+    Greedy theo value/weight
+    """
+    items_ratio = []
+    for weight, value in items:
+        ratio = value / weight
+        items_ratio.append((weight, value, ratio))
+    items_ratio.sort(key=lambda x: x[2], reverse=True)
+    total_value = 0
+    remaining = capacity
+    selected = []
+    for weight, value, ratio in items_ratio:
+        if remaining == 0:
+            break
+        if weight <= remaining:
+            total_value += value
+            remaining -= weight
+            selected.append((weight, value, 1.0))
+        else:
+            fraction = remaining / weight
+            total_value += value * fraction
+            selected.append((weight, value, fraction))
+            remaining = 0
+    return total_value, selected
+print("\n=== Fractional Knapsack ===")
+items = [
+    (10,60),
+    (20,100),
+    (30,120)
+]
+value, result = fractional_knapsack(50, items)
+print("Max value =", value)
+for w,v,f in result:
+    print(w,v,f)
+#  Minimum Intervals Remove
+
+def min_intervals_remove(intervals):
+    keep = activity_selection(intervals)
+    return len(intervals) - len(keep)
+print("\n=== Minimum Intervals Remove ===")
+intervals1 = [
+    (1,2),
+    (2,3),
+    (3,4),
+    (1,3)
+]
+print(min_intervals_remove(intervals1))
+intervals2 = [
+    (1,2),
+    (1,2),
+    (1,2)
+]
+print(min_intervals_remove(intervals2))
+import heapq
+import time
+
+# Part A - Meeting Rooms
+
+def min_meeting_rooms(meetings):
+
+    if not meetings:
+        return 0
+
+    meetings.sort(key=lambda x: x[0])
+
+    heap = []
+
+    heapq.heappush(heap, meetings[0][1])
+
+    for start, end in meetings[1:]:
+
+        if start >= heap[0]:
+            heapq.heappop(heap)
+
+        heapq.heappush(heap, end)
+
+    return len(heap)
+
+print("=== Meeting Rooms ===")
+
+meetings1 = [(0,30),(5,10),(15,20)]
+print(min_meeting_rooms(meetings1))
+
+meetings2 = [(7,10),(2,4)]
+print(min_meeting_rooms(meetings2))
+
+meetings3 = [(1,5),(2,6),(4,8)]
+print(min_meeting_rooms(meetings3))
+
+# Part B - Coin Change DP
+
+def coin_change_dp(amount, coins):
+
+    dp = [float('inf')] * (amount + 1)
+
+    dp[0] = 0
+
+    for i in range(1, amount + 1):
+
+        for coin in coins:
+
+            if coin <= i:
+                dp[i] = min(dp[i], dp[i-coin] + 1)
+
+    if dp[amount] == float('inf'):
+        return -1
+
+    return dp[amount]
+def coin_change_greedy(amount, coins):
+
+    coins = sorted(coins, reverse=True)
+
+    count = 0
+    detail = []
+
+    for coin in coins:
+
+        while amount >= coin:
+            amount -= coin
+            count += 1
+            detail.append(coin)
+
+    if amount == 0:
+        return count, detail
+
+    return -1, []
+
+print("\n=== Coin Change DP ===")
+
+print(coin_change_dp(30,[25,10,1]))
+
+#  Compare
+
+def compare_coin_change(amount, coins):
+
+    print("\n" + "="*50)
+
+    print(f"amount={amount}")
+    print(f"coins={coins}")
+
+    print("\nGREEDY")
+
+    start = time.time()
+
+    g_result, g_detail = coin_change_greedy(amount, coins)
+
+    g_time = time.time() - start
+
+    print("Result:", g_result)
+    print("Detail:", g_detail)
+    print("Time:", g_time)
+
+    print("\nDP")
+
+    start = time.time()
+
+    dp_result = coin_change_dp(amount, coins)
+
+    dp_time = time.time() - start
+
+    print("Result:", dp_result)
+    print("Time:", dp_time)
+
+    print("\nCOMPARISON")
+
+    if g_result == dp_result:
+        print("Greedy đúng")
+    else:
+        print("Greedy sai")
+
+    if g_time > 0:
+        print("Speedup =", dp_time/g_time)
+
+compare_coin_change(67,[25,10,5,1])
+compare_coin_change(30,[25,10,1])
+def find_content_children(greed, cookies):
+    """
+    Sort + Two Pointers
+    """
+
+    greed.sort()
+    cookies.sort()
+
+    child = 0
+    cookie = 0
+
+    while child < len(greed) and cookie < len(cookies):
+
+        if cookies[cookie] >= greed[child]:
+            child += 1
+
+        cookie += 1
+
+    return child
+
+
+print("=== Assign Cookies ===")
+
+print(find_content_children([1,2,3],[1,1]))
+print(find_content_children([1,2],[1,2,3]))
