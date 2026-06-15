@@ -1,0 +1,239 @@
+# ==========================================
+# IMPORT THƯ VIỆN
+# ==========================================
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+import seaborn as sns
+
+from sklearn.datasets import load_iris
+from sklearn.datasets import load_wine
+from sklearn.datasets import fetch_openml
+
+from pandas.plotting import parallel_coordinates
+from sklearn.preprocessing import MinMaxScaler
+from sklearn.decomposition import PCA
+from sklearn.manifold import TSNE
+
+sns.set_style("whitegrid")
+
+# BÀI 1: SCATTER PLOT - IRIS DATASET
+
+print("="*50)
+print("BÀI 1: SCATTER PLOT")
+print("="*50)
+
+# Tải dữ liệu Iris
+iris = load_iris()
+
+df_iris = pd.DataFrame(
+    iris.data,
+    columns=iris.feature_names
+)
+
+df_iris["species"] = iris.target
+
+print(df_iris.head())
+
+# Vẽ Scatter Plot
+plt.figure(figsize=(8,6))
+
+sns.scatterplot(
+    data=df_iris,
+    x="petal length (cm)",
+    y="petal width (cm)",
+    hue="species",
+    palette="Set1",
+    s=80
+)
+
+plt.title("Scatter Plot - Iris Dataset")
+plt.xlabel("Petal Length (cm)")
+plt.ylabel("Petal Width (cm)")
+plt.legend(title="Species")
+plt.show()
+
+print("\nNHẬN XÉT:")
+print("- Species 0 tách biệt rất rõ với hai lớp còn lại.")
+print("- Species 1 và Species 2 có một số vùng chồng lấn.")
+print("- Petal Length và Petal Width là hai thuộc tính phân loại tốt.")
+
+
+# ==========================================
+# BÀI 2: SCATTER MATRIX (PAIRPLOT)
+# ==========================================
+
+print("\n" + "="*50)
+print("BÀI 2: PAIRPLOT - WINE DATASET")
+print("="*50)
+
+# Tải dữ liệu Wine
+wine = load_wine()
+
+df_wine = pd.DataFrame(
+    wine.data,
+    columns=wine.feature_names
+)
+
+df_wine["target"] = wine.target
+
+print(df_wine.head())
+
+# Chỉ chọn một số thuộc tính để Pairplot chạy nhanh hơn
+selected_features = [
+    "alcohol",
+    "malic_acid",
+    "flavanoids",
+    "color_intensity",
+    "target"
+]
+
+sns.pairplot(
+    df_wine[selected_features],
+    hue="target",
+    diag_kind="kde",
+    palette="Set2"
+)
+
+plt.show()
+
+print("\nNHẬN XÉT:")
+print("- Alcohol và Flavanoids có khả năng phân biệt lớp khá tốt.")
+print("- Một số cặp thuộc tính có tương quan dương.")
+print("- Các lớp dữ liệu tạo thành những cụm tương đối rõ ràng.")
+
+
+# ==========================================
+# BÀI 3: PARALLEL COORDINATES
+# ==========================================
+
+print("\n" + "="*50)
+print("BÀI 3: PARALLEL COORDINATES")
+print("="*50)
+
+features = [
+    "alcohol",
+    "malic_acid",
+    "ash",
+    "flavanoids",
+    "proline"
+]
+
+df_plot = df_wine[features + ["target"]]
+
+# Chuẩn hóa dữ liệu
+scaler = MinMaxScaler()
+
+scaled_features = scaler.fit_transform(
+    df_plot[features]
+)
+
+df_scaled = pd.DataFrame(
+    scaled_features,
+    columns=features
+)
+
+df_scaled["class"] = df_plot["target"]
+
+plt.figure(figsize=(12,6))
+
+parallel_coordinates(
+    df_scaled,
+    "class",
+    colormap=plt.cm.Set1,
+    linewidth=1
+)
+
+plt.title("Parallel Coordinates Plot - Wine Dataset")
+plt.xlabel("Features")
+plt.ylabel("Normalized Value")
+
+plt.show()
+
+print("\nNHẬN XÉT:")
+print("- Mỗi lớp dữ liệu có xu hướng tạo thành các mẫu đường khác nhau.")
+print("- Thuộc tính Proline và Flavanoids giúp phân biệt nhóm khá rõ.")
+print("- Một số đường giao nhau thể hiện sự tương đồng giữa các lớp.")
+
+
+# ==========================================
+# BÀI 4: PCA VÀ t-SNE
+# ==========================================
+
+print("\n" + "="*50)
+print("BÀI 4: PCA VÀ t-SNE")
+print("="*50)
+
+print("Đang tải MNIST...")
+
+mnist = fetch_openml(
+    "mnist_784",
+    version=1,
+    as_frame=False
+)
+
+X = mnist.data
+y = mnist.target
+
+# Lấy 2000 mẫu để giảm thời gian xử lý
+X = X[:2000]
+y = y[:2000]
+
+# ---------- PCA ----------
+pca = PCA(
+    n_components=2,
+    random_state=42
+)
+
+X_pca = pca.fit_transform(X)
+
+plt.figure(figsize=(8,6))
+
+scatter = plt.scatter(
+    X_pca[:,0],
+    X_pca[:,1],
+    c=y.astype(int),
+    cmap="tab10",
+    s=10
+)
+
+plt.title("PCA Visualization of MNIST")
+plt.xlabel("Principal Component 1")
+plt.ylabel("Principal Component 2")
+plt.colorbar(scatter)
+
+plt.show()
+
+# ---------- t-SNE ----------
+print("Đang chạy t-SNE, vui lòng chờ...")
+
+tsne = TSNE(
+    n_components=2,
+    perplexity=30,
+    random_state=42
+)
+
+X_tsne = tsne.fit_transform(X)
+
+plt.figure(figsize=(8,6))
+
+scatter = plt.scatter(
+    X_tsne[:,0],
+    X_tsne[:,1],
+    c=y.astype(int),
+    cmap="tab10",
+    s=10
+)
+
+plt.title("t-SNE Visualization of MNIST")
+plt.xlabel("Dimension 1")
+plt.ylabel("Dimension 2")
+plt.colorbar(scatter)
+
+plt.show()
+
+print("\nSO SÁNH PCA VÀ t-SNE:")
+print("- PCA là phương pháp tuyến tính, chạy nhanh.")
+print("- t-SNE là phương pháp phi tuyến, giữ cấu trúc cụm tốt hơn.")
+print("- PCA thường tạo các cụm chồng lấn.")
+print("- t-SNE tạo các cụm chữ số tách biệt rõ hơn.")
