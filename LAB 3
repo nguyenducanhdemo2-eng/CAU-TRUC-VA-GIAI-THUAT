@@ -1,0 +1,273 @@
+def Hoan_vi(nums):
+    result = []
+    def backtrack(path, remaining):
+        if len(path) == len(nums):
+            result.append(path.copy())
+            return
+        for i in range(len(remaining)):
+            path.append(remaining[i])
+            backtrack(path, remaining[:i] + remaining[i + 1:])
+            path.pop()
+    backtrack([], nums)
+    return result
+# test 
+#print(Hoan_vi([1,2,3]))
+# COmbinations 
+def combinations(nums, k):
+    result = []
+    def backtrack(start, path):
+        if len(path) == k:
+            result.append(path.copy())
+            return
+        for i in range(start, len(nums)):
+            path.append(nums[i])
+            backtrack(i + 1, path)
+            path.pop()
+    backtrack(0, [])
+    return result
+#print(combinations(["1", "2", "3", "4"], 2))
+
+#  subsets
+def subsets(nums):
+    result = []
+    def backtrack(start, path):
+        result.append(path.copy())
+        for i in range(start, len(nums)):
+            path.append(nums[i])
+            backtrack(i + 1, path)
+            path.pop()
+    backtrack(0,[])
+    return result
+ds_tap_con = subsets([1, 2, 3, 4])
+#print(subsets([1, 2, 3, 4]))
+#print("SỐ TẬP CON : ",len(ds_tap_con))
+
+# Binary_String(n)
+def binary_string(n):
+    result = []
+    def backtrack(path):
+        if len(path) == n:
+            result.append("".join(path))
+            return
+        for choice in ['0', '1']:
+            path.append(choice)
+            backtrack(path)
+            path.pop()
+    backtrack([])
+    return result
+ds = binary_string(3)
+#print(ds)
+#print("SO CHUOI NHI PHAN:", len(ds))
+
+# BAI 2
+def is_safe(board, row, col, n):
+    """
+    Kiểm tra đặt quân hậu ở (row, col) có hợp lệ không
+    board: list lưu cột của quân hậu ở mỗi hàng
+    board[i] = j nghĩa là quân hậu hàng i ở cột j
+    """
+    # Kiểm tra tất cả các hàng trước đó
+    for prev_row in range(row):
+        prev_col = board[prev_row]
+
+        # Kiểm tra cùng cột
+        if prev_col == col:
+            return False
+
+        # Kiểm tra đường chéo
+        # Nếu |row1 - row2| == |col1 - col2| thì cùng đường chéo
+        if abs(prev_row - row) == abs(prev_col - col):
+            return False
+
+    return True
+
+
+def print_board(solution, n):
+    """
+    In bàn cờ N x N với quân hậu
+    """
+    for row in range(n):
+        line = ""
+
+        for col in range(n):
+            if solution[row] == col:
+                line += "Q "
+            else:
+                line += ". "
+
+        print(line)
+
+    print()
+
+    # N QUeens Không pruning
+class Counter:
+    def __init__(self):
+        self.total_calls = 0
+        self.solutions = 0
+    def report(self):
+        print(f"Tổng số lần gọi: {self.total_calls}")
+        print(f"Số giải pháp tìm được: {self.solutions}")
+def is_valid_board(board):
+    n = len(board)
+    for i in range(n):
+        for j in range(i + 1, n):
+            # cùng cột
+            if board[i] == board[j]:
+                return False
+            # cùng đường chéo
+            if abs(i - j) == abs(board[i] - board[j]):
+                return False
+
+    return True
+
+def solve_n_queens_no_pruning(n):
+    counter = Counter()
+    result = []
+    board = []
+    def backtrack(row):
+        counter.total_calls += 1
+        # Base Case
+        if row == n:
+            if is_valid_board(board):
+                result.append(board.copy())
+                counter.solutions += 1
+            return
+        # thử tất cả cột
+        for col in range(n):
+            # CHOOSE
+            board.append(col)
+            # EXPLORE
+            backtrack(row + 1)
+            # UNCHOOSE
+            board.pop()
+    backtrack(0)
+    counter.report()
+    return result
+solutions = solve_n_queens_no_pruning(4)
+print("\nCác lời giải:")
+for s in solutions:
+    print(s)
+# N QUEENS CÓ PRUNING
+def solve_n_queens_with_pruning(n):
+    counter = Counter()
+    result = []
+    board = []
+    def backtrack(row):
+        counter.total_calls += 1
+        # Base Case
+        if row == n:
+            result.append(board.copy())
+            counter.solutions += 1
+            return
+        # Thử từng cột
+        for col in range(n):
+            # PRUNING
+            if is_safe(board, row, col, n):
+                # CHOOSE
+                board.append(col)
+                # EXPLORE
+                backtrack(row + 1)
+                # UNCHOOSE
+                board.pop()
+    backtrack(0)
+    counter.report()
+    return result
+# SO SÁNH THỜI GIAN
+import time
+
+def compare_n_queens(n):
+    print("\n" + "="*50)
+    print(f"So sánh N-Queens với N={n}")
+    print("="*50)
+
+    # Không pruning
+    print("\n[1] KHÔNG có pruning:")
+    start = time.time()
+    result1 = solve_n_queens_no_pruning(n)
+    time1 = time.time() - start
+    print(f"Thời gian: {time1:.6f}s")
+    # Có pruning
+    print("\n[2] CÓ pruning:")
+    start = time.time()
+    result2 = solve_n_queens_with_pruning(n)
+    time2 = time.time() - start
+    print(f"Thời gian: {time2:.6f}s")
+    print("\n[3] SO SÁNH:")
+    print(f"Tốc độ tăng: {time1/time2:.2f}x")
+    if len(result2) > 0:
+        print(f"\nMột lời giải cho {n}-Queens:")
+        print_board(result2[0], n)
+compare_n_queens(4)
+compare_n_queens(6)
+# SUBSET KHÔNG PRUNING
+def subset_sum_basic(nums, target):
+    result = []
+    def backtrack(start, path, current_sum):
+       # Base Case
+        if current_sum == target:
+            result.append(path.copy())
+            return
+        # Thử các số tiếp theo
+        for i in range(start, len(nums)):
+            # CHOOSE
+            path.append(nums[i])
+            # EXPLORE
+            backtrack(i + 1, path, current_sum + nums[i])
+            # UNCHOOSE
+            path.pop()
+    backtrack(0, [], 0)
+    return result
+# SUBSET CÓ PRUNING
+def subset_sum_pruning(nums, target):
+    nums.sort()
+    result = []
+    def backtrack(start, path, current_sum):
+        # Pruning 1
+        if current_sum > target:
+            return
+        # Base Case
+        if current_sum == target:
+            result.append(path.copy())
+            return
+        for i in range(start, len(nums)):
+            # Pruning 3
+            if i > start and nums[i] == nums[i-1]:
+                continue
+            # Pruning 2
+            if current_sum + nums[i] > target:
+                break
+            # Pruning 4
+            remaining_sum = sum(nums[i:])
+            if current_sum + remaining_sum < target:
+                break
+            path.append(nums[i])
+            backtrack(
+                i + 1,
+                path,
+                current_sum + nums[i]
+            )
+            path.pop()
+    backtrack(0, [], 0)
+    return result
+# HÀM SO SÁNH 
+import time
+
+def compare_subset_sum(nums, target):
+    print("="*50)
+    start = time.time()
+    result1 = subset_sum_basic(nums, target)
+    time1 = time.time() - start
+    print("Basic:")
+    print(f"Số nghiệm: {len(result1)}")
+    print(f"Thời gian: {time1:.6f}s")
+    start = time.time()
+    result2 = subset_sum_pruning(nums, target)
+    time2 = time.time() - start
+    print("\nPruning:")
+    print(f"Số nghiệm: {len(result2)}")
+    print(f"Thời gian: {time2:.6f}s")
+    print("\nTốc độ tăng:")
+    print(f"{time1/time2:.2f}x")
+nums = list(range(1,20))
+target = 50
+compare_subset_sum(nums, target)
