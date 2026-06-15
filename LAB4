@@ -1,0 +1,321 @@
+# =====================================================
+# ITA106 - DATA VISUALIZATION
+# BÀI 1: HEATMAP
+# BÀI 2: PIXEL-BASED VISUALIZATION
+# BÀI 3: STAR GLYPH
+# BÀI 4: CHERNOFF FACES
+# =====================================================
+
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+import seaborn as sns
+
+from sklearn.datasets import load_wine
+from sklearn.preprocessing import MinMaxScaler
+
+# =====================================================
+# LOAD DATASET
+# =====================================================
+
+wine = load_wine()
+
+df = pd.DataFrame(
+    wine.data,
+    columns=wine.feature_names
+)
+
+df["target"] = wine.target
+
+print("=" * 60)
+print("THÔNG TIN DATASET")
+print("=" * 60)
+
+print(df.head())
+
+# =====================================================
+# BÀI 1: HEATMAP CORRELATION MATRIX
+# =====================================================
+
+print("\n")
+print("=" * 60)
+print("BÀI 1: HEATMAP")
+print("=" * 60)
+
+corr_matrix = df.corr()
+
+plt.figure(figsize=(12, 8))
+
+sns.heatmap(
+    corr_matrix,
+    annot=True,
+    cmap="coolwarm",
+    linewidths=0.5,
+    fmt=".2f"
+)
+
+plt.title("Correlation Heatmap - Wine Dataset")
+
+plt.tight_layout()
+
+plt.show()
+
+print("\nNHẬN XÉT:")
+print("- Flavanoids và Total Phenols tương quan dương mạnh.")
+print("- Alcohol và Proline có tương quan khá cao.")
+print("- Một số biến có thể cung cấp thông tin tương tự nhau.")
+
+# =====================================================
+# BÀI 2: PIXEL-BASED VISUALIZATION
+# =====================================================
+
+print("\n")
+print("=" * 60)
+print("BÀI 2: PIXEL-BASED VISUALIZATION")
+print("=" * 60)
+
+values = df["proline"].values
+
+scaler = MinMaxScaler()
+
+values = scaler.fit_transform(
+    values.reshape(-1, 1)
+).flatten()
+
+size = int(np.ceil(np.sqrt(len(values))))
+
+pixel_matrix = np.zeros(size * size)
+
+pixel_matrix[:len(values)] = values
+
+pixel_matrix = pixel_matrix.reshape(size, size)
+
+plt.figure(figsize=(7, 7))
+
+plt.imshow(
+    pixel_matrix,
+    cmap="viridis"
+)
+
+plt.colorbar()
+
+plt.title("Pixel-based Visualization (Proline Feature)")
+
+plt.show()
+
+print("\nNHẬN XÉT:")
+print("- Pixel sáng biểu thị giá trị lớn.")
+print("- Pixel tối biểu thị giá trị nhỏ.")
+print("- Có thể phát hiện nhanh các vùng dữ liệu nổi bật.")
+
+# =====================================================
+# BÀI 3: STAR GLYPH
+# =====================================================
+
+print("\n")
+print("=" * 60)
+print("BÀI 3: STAR GLYPH")
+print("=" * 60)
+
+features = [
+    "alcohol",
+    "malic_acid",
+    "ash",
+    "flavanoids",
+    "color_intensity",
+    "proline"
+]
+
+scaled_data = scaler.fit_transform(
+    df[features]
+)
+
+def star_plot(values, label):
+
+    num_vars = len(values)
+
+    angles = np.linspace(
+        0,
+        2 * np.pi,
+        num_vars,
+        endpoint=False
+    )
+
+    values = np.concatenate(
+        (values, [values[0]])
+    )
+
+    angles = np.concatenate(
+        (angles, [angles[0]])
+    )
+
+    fig = plt.figure(figsize=(6, 6))
+
+    ax = plt.subplot(
+        111,
+        polar=True
+    )
+
+    ax.plot(
+        angles,
+        values,
+        linewidth=2
+    )
+
+    ax.fill(
+        angles,
+        values,
+        alpha=0.3
+    )
+
+    ax.set_xticks(
+        angles[:-1]
+    )
+
+    ax.set_xticklabels(
+        features
+    )
+
+    ax.set_title(label)
+
+    plt.show()
+
+for i in range(3):
+
+    star_plot(
+        scaled_data[i],
+        f"Sample {i+1}"
+    )
+
+print("\nNHẬN XÉT:")
+print("- Mỗi hình sao đại diện cho một bản ghi.")
+print("- Hình dạng khác nhau thể hiện sự khác biệt dữ liệu.")
+print("- Dễ so sánh nhiều thuộc tính cùng lúc.")
+
+# =====================================================
+# BÀI 4: CHERNOFF FACES
+# =====================================================
+
+print("\n")
+print("=" * 60)
+print("BÀI 4: CHERNOFF FACES")
+print("=" * 60)
+
+face_features = [
+    "alcohol",
+    "malic_acid",
+    "ash",
+    "flavanoids"
+]
+
+samples = scaler.fit_transform(
+    df[face_features]
+)
+
+samples = samples[:9]
+
+def draw_face(ax, data):
+
+    face_size = 0.5 + data[0] * 0.5
+
+    eye_size = 0.05 + data[1] * 0.05
+
+    mouth_curve = data[2] - 0.5
+
+    nose_size = 0.05 + data[3] * 0.05
+
+    # Face
+    face = plt.Circle(
+        (0.5, 0.5),
+        face_size * 0.4,
+        fill=False,
+        linewidth=2
+    )
+
+    ax.add_patch(face)
+
+    # Eyes
+    left_eye = plt.Circle(
+        (0.35, 0.6),
+        eye_size,
+        color="black"
+    )
+
+    right_eye = plt.Circle(
+        (0.65, 0.6),
+        eye_size,
+        color="black"
+    )
+
+    ax.add_patch(left_eye)
+    ax.add_patch(right_eye)
+
+    # Nose
+    nose = plt.Circle(
+        (0.5, 0.5),
+        nose_size,
+        color="black"
+    )
+
+    ax.add_patch(nose)
+
+    # Mouth
+    x = np.linspace(
+        0.35,
+        0.65,
+        100
+    )
+
+    y = 0.35 + mouth_curve * (x - 0.5) ** 2 * -4
+
+    ax.plot(
+        x,
+        y,
+        linewidth=2
+    )
+
+    ax.set_xlim(0, 1)
+
+    ax.set_ylim(0, 1)
+
+    ax.axis("off")
+
+fig, axes = plt.subplots(
+    3,
+    3,
+    figsize=(10, 10)
+)
+
+for i, ax in enumerate(axes.flat):
+
+    draw_face(
+        ax,
+        samples[i]
+    )
+
+    ax.set_title(
+        f"Sample {i+1}"
+    )
+
+plt.suptitle(
+    "Chernoff Faces - Wine Dataset",
+    fontsize=16
+)
+
+plt.tight_layout()
+
+plt.show()
+
+print("\nNHẬN XÉT:")
+print("- Kích thước mặt, mắt, mũi và miệng thay đổi theo dữ liệu.")
+print("- Các bản ghi có giá trị khác nhau tạo ra khuôn mặt khác nhau.")
+print("- Giúp nhận diện nhóm dữ liệu một cách trực quan.")
+
+# =====================================================
+# KẾT THÚC
+# =====================================================
+
+print("\n")
+print("=" * 60)
+print("HOÀN THÀNH 4 BÀI THỰC HÀNH")
+print("=" * 60)
